@@ -12,9 +12,10 @@ class Display:
         self.le = Pin(12, Pin.OUT)
 
         self.CS_cnt = 0
-        self.leds = [[0] * 24 for i in range(0,8)]
+        self.leds = [[0] * 32 for i in range(0,8)]
         self.disp_offset = 2
         self.initialise_fonts()
+        self.initialise_icons()
 
     def start(self):
         self.timer = Timer(period=1, callback=self.repeating_timer_callback_ms)
@@ -23,7 +24,7 @@ class Display:
         self.CS_cnt = (self.CS_cnt+1)%8
         
         led_row = self.leds[self.CS_cnt]
-        for col in range(24):
+        for col in range(32):
             self.clk.value(0)
             self.sdi.value(led_row[col])
             self.clk.value(1)
@@ -35,14 +36,22 @@ class Display:
         self.a2.value(1 if self.CS_cnt&0x04 else 0)
 
     def show(self, pos, character):
-        print("PRINTING", character)
-        pos+=self.disp_offset-8 # Plus the offset of the status indicator 
+        pos+=self.disp_offset # Plus the offset of the status indicator 
         char = self.ziku[character]
         for row in range(1,8):
             byte = char.rows[row-1]
             for col in range(0, char.width):
-                print("---ROW:%d POS:%d COL:%d LED:%d" % (row, pos, col, (byte >> col) % 2))
                 self.leds[row][pos+col] = (byte >> col) % 2
+
+    def show_icon(self, name):
+        icon = self.Icons[name]
+        for w in range(icon.width):
+            self.leds[icon.y][icon.x+w]=1
+
+    def hide_icon(self, name):
+        icon = self.Icons[name]
+        for w in range(icon.width):
+            self.leds[icon.y][icon.x+w]=0
 
     def print(self):
         for row in range(0,8):
@@ -55,22 +64,51 @@ class Display:
         Prints a crossed square. For debugging purposes.
         '''
         for row in range(1,8):
-            self.leds[row][0]=1
+            self.leds[row][2]=1
             self.leds[row][23]=1
-        for col in range(0,23):
+        for col in range(2,23):
             self.leds[1][col]=1
             self.leds[7][col]=1
             self.leds[int(col/24*7)+1][col]=1
             self.leds[7-int(col/24*7)][col]=1
 
     class Character:
-        def __init__(self, width, rows):
+        def __init__(self, width, rows, offset=2):
             self.width = width
             self.rows = rows
+            self.offset = offset
+
+    class Icon:
+        def __init__(self, x, y, width=1):
+            self.x = x
+            self.y = y
+            self.width=width
+
+    def initialise_icons(self):
+        self.Icons = {
+            "MoveOn": self.Icon(0,0, width=2),
+            "AlarmOn": self.Icon(0,1, width=2),
+            "CountDown": self.Icon(0,2, width=2),
+            "°F": self.Icon(0,3),
+            "°C": self.Icon(1,3),
+            "AM": self.Icon(0,4),
+            "PM": self.Icon(1,4),
+            "CountUp": self.Icon(0,5, width=2),
+            "Hourly": self.Icon(0,6, width=2),
+            "AutoLight": self.Icon(0,7, width=2),
+            "Mon": self.Icon(3,0, width=3),
+            "Tue": self.Icon(6,0, width=3),
+            "Wed": self.Icon(9,0, width=3),
+            "Thur": self.Icon(12,0, width=3),
+            "Fri": self.Icon(15,0, width=3),
+            "Sat": self.Icon(18,0, width=3),
+            "Sun": self.Icon(21,0, width=3),
+        }
 # Derived from c code created by yufu on 2021/1/23.
 # Modulus method: negative code, reverse, line by line, 4X7 font 
     def initialise_fonts(self):
         self.ziku = {
+            "all": self.Character(width=3, rows=[0x05,0x05,0x03,0x03,0x03,0x03,0x03]),
             "0": self.Character(width=4, rows=[0x06,0x09,0x09,0x09,0x09,0x09,0x06]),
             "1": self.Character(width=4, rows=[0x04,0x06,0x04,0x04,0x04,0x04,0x0E]),
             "2": self.Character(width=4, rows=[0x06,0x09,0x08,0x04,0x02,0x01,0x0F]),

@@ -1,16 +1,20 @@
-import random
+import time
 from display import Display
 
 display = Display()
 
-# display.show(0,'0')
-# display.show(5,'5')
-# display.show(10,':')
-# display.show(13,'1')
-# display.show(18,'2')
-display.square()
-display.print()
-display.start()
+display.show_icon("°C")
+display.show_icon("MoveOn")
 
+display.start()
 while True:
-    pass
+    for day in ["Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun"]:
+        print("Displaying", day)
+        display.show_icon(day)
+        time.sleep(1)
+
+    for day in ["Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun"]:
+        print("Hiding", day)
+        display.hide_icon(day)
+        time.sleep(1)
+    
