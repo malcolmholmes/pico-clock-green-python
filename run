@@ -1,0 +1,14 @@
+#!/bin/bash
+
+NOW=$(date +%s)
+LASTRUN=$(cat LASTRUN)
+for PY in *.py; do
+  CHANGED=$(date +%s -r $PY)
+  if (( $CHANGED >= $LASTRUN )); then
+    echo "$PY..."
+    ampy --port /dev/ttyACM0 put $PY /$PY
+  fi
+done
+
+echo $NOW > LASTRUN
+ampy --port /dev/ttyACM0 run main.py
