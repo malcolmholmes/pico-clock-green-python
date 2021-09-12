@@ -1,8 +1,9 @@
+import time
 from machine import Pin, Timer
 import random
 
 class Display:
-    def __init__(self):
+    def __init__(self, scheduler):
         self.a0 = Pin(16, Pin.OUT)
         self.a1 = Pin(18, Pin.OUT)
         self.a2 = Pin(22, Pin.OUT)
@@ -11,47 +12,79 @@ class Display:
         self.clk = Pin(10, Pin.OUT)
         self.le = Pin(12, Pin.OUT)
 
-        self.CS_cnt = 0
+        self.row = 0
+        self.count = 0
         self.leds = [[0] * 32 for i in range(0,8)]
+        self.leds_changed = False
         self.disp_offset = 2
         self.initialise_fonts()
         self.initialise_icons()
-
-    def start(self):
-        self.timer = Timer(period=1, callback=self.repeating_timer_callback_ms)
-
-    def repeating_timer_callback_ms(self, timer):
-        self.CS_cnt = (self.CS_cnt+1)%8
+        scheduler.schedule("enable-leds", 1, self.enable_leds)
         
-        led_row = self.leds[self.CS_cnt]
-        for col in range(32):
-            self.clk.value(0)
-            self.sdi.value(led_row[col])
-            self.clk.value(1)
+    def enable_leds(self, t):
+        self.count+=1
+        self.row = (self.row+1)%8
+        led_row = self.leds[self.row]
+        if True:
+            for col in range(32):
+                self.clk.value(0)
+                self.sdi.value(led_row[col])
+                self.clk.value(1)
+            self.le.value(1)
+            self.le.value(0)
+            self.leds_changed = False
         
-        self.le.value(1)
-        self.le.value(0)
-        self.a0.value(1 if self.CS_cnt&0x01 else 0)
-        self.a1.value(1 if self.CS_cnt&0x02 else 0)
-        self.a2.value(1 if self.CS_cnt&0x04 else 0)
+        self.a0.value(1 if self.row&0x01 else 0)
+        self.a1.value(1 if self.row&0x02 else 0)
+        self.a2.value(1 if self.row&0x04 else 0)
 
-    def show(self, pos, character):
+    def clear(self, x=0, y=0, w=22, h=7):
+        for yy in range(y, y+h):
+            for xx in range(x, x+w):
+                self.leds[yy][xx]=0
+
+    def show_char(self, character, pos):
         pos+=self.disp_offset # Plus the offset of the status indicator 
         char = self.ziku[character]
         for row in range(1,8):
             byte = char.rows[row-1]
             for col in range(0, char.width):
                 self.leds[row][pos+col] = (byte >> col) % 2
+        self.leds_changed = True
+
+    def show_text(self, text, pos=0):
+        i=0
+        while i<len(text):
+            if text[i:i+2] in self.ziku:
+                c=text[i:i+2]
+                i+=2
+            else:
+                c=text[i]
+                i+=1
+            char = self.ziku[c]
+            self.show_char(c, pos)
+            width = self.ziku[c].width
+            pos+=width+1
 
     def show_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x+w]=1
+        self.leds_changed = True
 
     def hide_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x+w]=0
+        self.leds_changed = True
+
+    def backlight_on(self):
+        self.leds[0][2]=1
+        self.leds[0][5]=1
+
+    def backlight_off(self):
+        self.leds[0][2]=0
+        self.leds[0][5]=0
 
     def print(self):
         for row in range(0,8):
@@ -96,13 +129,13 @@ class Display:
             "CountUp": self.Icon(0,5, width=2),
             "Hourly": self.Icon(0,6, width=2),
             "AutoLight": self.Icon(0,7, width=2),
-            "Mon": self.Icon(3,0, width=3),
-            "Tue": self.Icon(6,0, width=3),
-            "Wed": self.Icon(9,0, width=3),
-            "Thur": self.Icon(12,0, width=3),
-            "Fri": self.Icon(15,0, width=3),
-            "Sat": self.Icon(18,0, width=3),
-            "Sun": self.Icon(21,0, width=3),
+            "Mon": self.Icon(3,0, width=2),
+            "Tue": self.Icon(6,0, width=2),
+            "Wed": self.Icon(9,0, width=2),
+            "Thur": self.Icon(12,0, width=2),
+            "Fri": self.Icon(15,0, width=2),
+            "Sat": self.Icon(18,0, width=2),
+            "Sun": self.Icon(21,0, width=2),
         }
 # Derived from c code created by yufu on 2021/1/23.
 # Modulus method: negative code, reverse, line by line, 4X7 font 
@@ -130,13 +163,14 @@ class Display:
             "N": self.Character(width=4, rows=[0x09,0x09,0x0B,0x0D,0x09,0x09,0x09]),
             "P": self.Character(width=4, rows=[0x07,0x09,0x09,0x07,0x01,0x01,0x01]),
             "U": self.Character(width=4, rows=[0x09,0x09,0x09,0x09,0x09,0x09,0x06]),
-            ":": self.Character(width=4, rows=[0x00,0x03,0x03,0x00,0x03,0x03,0x00]),        #2×7
+            ":": self.Character(width=2, rows=[0x00,0x03,0x03,0x00,0x03,0x03,0x00]),        #2×7
+            " :": self.Character(width=2, rows=[0x00,0x00,0x00,0x00,0x00,0x00,0x00]),       # colon width space
             "°C": self.Character(width=4, rows=[0x01,0x0C,0x12,0x02,0x02,0x12,0x0C]),       # celcuis 5×7
             "°F": self.Character(width=4, rows=[0x01,0x1E,0x02,0x1E,0x02,0x02,0x02]),       # farenheit
             " ": self.Character(width=4, rows=[0x00,0x00,0x00,0x00,0x00,0x00,0x00]),        # space
             "Y": self.Character(width=4, rows=[0x1F,0x04,0x04,0x04,0x04,0x04,0x04]),        # 5*7
-            ".": self.Character(width=4, rows=[0x00,0x00,0x00,0x00,0x00,0x00,0x01]),        # 1×7
-            "-": self.Character(width=4, rows=[0x00,0x00,0x00,0x03,0x00,0x00,0x00]),        # 2×7
+            ".": self.Character(width=1, rows=[0x00,0x00,0x00,0x00,0x00,0x00,0x01]),        # 1×7
+            "-": self.Character(width=2, rows=[0x00,0x00,0x00,0x03,0x00,0x00,0x00]),        # 2×7
             "M": self.Character(width=4, rows=[0x00,0x11,0x1B,0x15,0x11,0x11,0x11,0x11]),   # 5×7
             "/": self.Character(width=4, rows=[0x00,0x04,0x04,0x02,0x02,0x02,0x01,0x01]),   # 3×7
             "°C2": self.Character(width=4, rows=[0x00,0x01,0x0C,0x12,0x02,0x02,0x12,0x0C]), # 5×7

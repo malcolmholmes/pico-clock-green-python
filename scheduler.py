@@ -1,0 +1,33 @@
+from machine import Timer
+import time
+import _thread
+
+class Scheduler:
+
+    class Schedule:
+        def __init__(self, name, duration, callback):
+            self.name = name
+            self.duration = duration
+            self.callback = callback
+            self.lastrun = 0
+
+    count=0
+    def __init__(self):
+        self.schedules = []
+
+    def start(self):
+        self.start = time.ticks_ms()
+        self.timer = Timer(period=1, callback=self.event_callback)
+
+    def schedule(self, name, duration, callback):
+        self.schedules.append(self.Schedule(name, duration, callback))
+
+    def event_callback(self, t):
+        for schedule in self.schedules:
+            if schedule.duration == 1:
+                schedule.callback(t)
+            else:
+                tm = time.ticks_ms()
+                if time.ticks_diff(tm, schedule.lastrun) > schedule.duration:
+                    schedule.callback(t)
+                    schedule.lastrun = tm

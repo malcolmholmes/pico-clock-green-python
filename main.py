@@ -1,20 +1,42 @@
 import time
 from display import Display
+from speaker import Speaker
+from buttons import Buttons
+from scheduler import Scheduler
+from clock import Clock
+from rtc import RTC
 
-display = Display()
+scheduler = Scheduler()
 
-display.show_icon("°C")
-display.show_icon("MoveOn")
+display = Display(scheduler)
 
-display.start()
+#display.show_icon("°C")
+#display.show_icon("MoveOn")
+#display.show_text("05:12")
+
+speaker = Speaker(scheduler)
+
+def short_button_action(t):
+    print("BUTTON!")
+    speaker.beep(100)
+
+def long_button_action(t):
+    print("LOOOOOONG BUTTON!")
+
+buttons = Buttons(scheduler)
+button1 = buttons.add_button(1)
+button2 = buttons.add_button(2)
+
+button1.add_callback(short_button_action, max=500)
+button1.add_callback(long_button_action, min=500)
+
+rtc = RTC()
+
+clock = Clock(scheduler, display, rtc)
+
+print("STARTING...")
+scheduler.start()
+
 while True:
-    for day in ["Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun"]:
-        print("Displaying", day)
-        display.show_icon(day)
-        time.sleep(1)
-
-    for day in ["Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun"]:
-        print("Hiding", day)
-        display.hide_icon(day)
-        time.sleep(1)
-    
+    time.sleep(1)
+    print(".", end="")
