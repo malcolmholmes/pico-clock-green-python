@@ -28,9 +28,9 @@ class Buttons:
             self.pressed_time = None
 
         def add_callback(self, callback, min=0, max=-1):
-            callbackObj = self.Callback(callback, min, max)
-            self.callbacks.append(callbackObj)
-            return callbackObj
+            callback_obj = self.Callback(callback, min, max)
+            self.callbacks.append(callback_obj)
+            return callback_obj
 
     def __init__(self, scheduler):
         self.buttons = []
