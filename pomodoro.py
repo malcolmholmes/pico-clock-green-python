@@ -11,7 +11,7 @@ class Pomodoro:
         self.start_time = None
         scheduler.schedule("pomodoro-second", 1000, self.secs_callback)
         scheduler.add_app(self)
-        self.pomodoro_duration=1*60 # 25 mins
+        self.pomodoro_duration=25*60 # 25 mins
 
     def enable(self):
         self.enabled = True
