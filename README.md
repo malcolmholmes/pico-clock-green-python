@@ -15,3 +15,5 @@ Python port of the C code for the Waveshare [Pico-Clock-Green](https://www.waves
 ## Instructions (Windows)
 If not running on Linux, use your usual method for uploading code to the Pico.
 
+## Changelog
+See [changelog.md](changelog.md) for a list of updates.
