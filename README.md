@@ -6,6 +6,9 @@ Python port of the C code for the Waveshare [Pico-Clock-Green](https://www.waves
   core functionality of the clock (alarms/time setting, etc) remains to be
   implemented.
 
+> **Status**: This code is changing a lot at present, as all the necessary features
+  are added. Please expect change, and please expect classes and APIs to change.
+
 ## Instructions (Linux)
 * Flash MicroPython onto the Pico.
 * Install `ampy` from AdaFruit.
