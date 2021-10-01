@@ -1,8 +1,6 @@
 from machine import Pin
 import time
 
-
-
 STATE_UNPRESSED=1
 STATE_PRESSED=2
 
@@ -32,14 +30,32 @@ class Buttons:
             self.callbacks.append(callback_obj)
             return callback_obj
 
+        def remove_callback(self, callback, min=0, max=-1):
+            for callback in self.callbacks:
+                if callback.callback == callback and callback.min == min and callback.max == max:
+                    self.callback.remove(callback)
+                    break
+
+        def clear_callbacks(self):
+            self.callbacks = []
+
     def __init__(self, scheduler):
-        self.buttons = []
+        self.buttons = [
+            Buttons.Button(number) for number in (1,2,3)
+        ]
         scheduler.schedule("button-press", 1, self.millis_callback)
 
-    def add_button(self, number):
-        button = Buttons.Button(number)
-        self.buttons.append(button)
-        return button
+    def add_callback(self, number, callback, min=0, max=-1):
+        self.buttons[number-1].add_callback(callback, min, max)
+
+    def remove_callback(self, number, callback, min=0, max=-1):
+        self.buttons[number-1].remove_callback(callback, min, max)
+
+    def clear_callbacks(self, number):
+        self.buttons[number-1].clear_callbacks()
+
+    def get_button(self, number):
+        return self.buttons[number-1]
 
     def millis_callback(self, t):
         for button in self.buttons:
@@ -55,4 +71,5 @@ class Buttons:
                     for callback in button.callbacks:
                         if callback.min < press_duration and (callback.max==-1 or press_duration <= callback.max):
                             callback.callback(t)
+                            break
                     button.pressed = None

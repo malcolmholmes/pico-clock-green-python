@@ -38,9 +38,9 @@ class Display:
         self.a1.value(1 if self.row&0x02 else 0)
         self.a2.value(1 if self.row&0x04 else 0)
 
-    def clear(self, x=0, y=0, w=22, h=7):
-        for yy in range(y, y+h):
-            for xx in range(x, x+w):
+    def clear(self, x=0, y=0, w=24, h=7):
+        for yy in range(y, y+h+1):
+            for xx in range(x, x+w+1):
                 self.leds[yy][xx]=0
 
     def show_char(self, character, pos):

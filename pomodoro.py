@@ -1,28 +1,31 @@
 import time
+from apps import App
 
 class Pomodoro:
-    def __init__(self, scheduler, display, speaker):
-        self.name = "Pomodoro"
+    def __init__(self, scheduler, display, speaker, buttons):
+        App.__init__(self, "Pomodoro", "pomod")
         self.display = display
         self.speaker = speaker
         self.scheduler = scheduler
+        self.buttons = buttons
         self.enabled = False
         self.started = False
         self.start_time = None
         scheduler.schedule("pomodoro-second", 1000, self.secs_callback)
-        scheduler.add_app(self)
         self.pomodoro_duration=25*60 # 25 mins
 
     def enable(self):
         self.enabled = True
         t = "%02d:%02d" % (self.pomodoro_duration // 60, self.pomodoro_duration % 60)
         self.display.show_text(t)
+        self.buttons.add_callback(2, self.start_callback, max=500)
+        self.buttons.add_callback(2, self.clear_callback, min=500)
         
     def disable(self):
         self.enabled = False
         self.started = False
         self.start_time = None
-        
+
     def start(self):
         self.started = True
         if not self.start_time:
@@ -42,14 +45,12 @@ class Pomodoro:
                 self.start_time = None
 
     def start_callback(self, t):
-        if not self.enabled:
-            print("ENABLE POMODORO")
-            self.scheduler.enable_app(self.name)
-        elif self.enabled and self.started:
+        if self.enabled and self.started:
             self.stop()
         else:
             print("START POMODORO")
             self.start()
 
-    def stop_callback(self, t):
-        self.scheduler.disable_app(self.name)
+    def clear_callback(self, t):
+        self.stop()
+        self.enable()

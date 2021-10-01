@@ -1,16 +1,15 @@
 import time
+from apps import App
 
-class Clock:
+class Clock(App):
     def __init__(self, scheduler, display, rtc):
-        self.name = "Clock"
+        App.__init__(self, "Clock", "clock")
         self.display = display
         self.rtc = rtc
         self.enabled = True
         self.scheduler = scheduler
         scheduler.schedule("clock-second", 1000, self.secs_callback)
         scheduler.schedule("clock-minute", 60000, self.mins_callback)
-        scheduler.add_app(self)
-        scheduler.enable_app(self.name)
 
     def enable(self):
         self.enabled = True
