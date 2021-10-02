@@ -70,8 +70,8 @@ class DS3231:
                 rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
         return result
 
-    def save_time(self):
-        (YY, MM, mday, hh, mm, ss, wday, yday) = utime.localtime()  # Based on RTC
+    def save_time(self, t):
+        (YY, MM, mday, hh, mm, ss, wday, yday) = t
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, tobytes(dec2bcd(ss)))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 1, tobytes(dec2bcd(mm)))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 2, tobytes(dec2bcd(hh)))  # Sets to 24hr mode

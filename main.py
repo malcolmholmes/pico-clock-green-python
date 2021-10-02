@@ -7,6 +7,7 @@ from clock import Clock
 from rtc import RTC
 from apps import Apps
 from pomodoro import Pomodoro
+from time_set import TimeSet
 
 scheduler = Scheduler()
 display = Display(scheduler)
@@ -16,6 +17,7 @@ rtc = RTC()
 
 apps = Apps(display, buttons)
 apps.add(Clock(scheduler, display, rtc))
+apps.add(TimeSet(scheduler, display, buttons, rtc))
 apps.add(Pomodoro(scheduler, display, speaker, buttons))
 
 print("STARTING...")

@@ -11,5 +11,5 @@ class RTC:
     def get_time(self):
         return self.ds.get_time()
 
-    def save_time(self):
-        return self.ds.save_time()
+    def save_time(self, t):
+        return self.ds.save_time(t)
