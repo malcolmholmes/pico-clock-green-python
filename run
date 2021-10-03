@@ -1,14 +1,30 @@
-#!/bin/bash
+#!/usr/local/bin/python3
+import argparse
+import contextlib
+import os
+import subprocess
+from datetime import datetime
+from pathlib import Path
 
-NOW=$(date +%s)
-LASTRUN=$(cat LASTRUN)
-for PY in *.py; do
-  CHANGED=$(date +%s -r $PY)
-  if (( $CHANGED >= $LASTRUN )); then
-    echo "$PY..."
-    ampy --port /dev/ttyACM0 put $PY /$PY
-  fi
-done
+parser = argparse.ArgumentParser()
+parser.add_argument('--device', action='store_true', default="/dev/ttyACM0")
+args = parser.parse_args()
 
-echo $NOW > LASTRUN
-ampy --port /dev/ttyACM0 run main.py
+CURRENT_DIR = Path(__file__).parent
+NOW = datetime.now()
+with contextlib.suppress(FileNotFoundError):
+    LASTRUN = datetime(year=2000, month=1, day=1)
+    with open("LASTRUN") as last_run_file:
+        LASTRUN = datetime.utcfromtimestamp(int(last_run_file.read()))
+with open("LASTRUN", "w") as last_run_file:
+    last_run_file.write(NOW.strftime("%s"))
+
+for file in os.listdir(CURRENT_DIR):
+    if file.split(".")[-1] == "py":
+        if datetime.utcfromtimestamp(os.path.getmtime(CURRENT_DIR.joinpath(file))) > LASTRUN:
+            print(f"copy: {file}")
+            subprocess.run(["ampy", "--port", args.device, "put", file, f"/{file}"])
+        else:
+            print(f"up to date: {file}")
+
+subprocess.run(["ampy", "--port", args.device, "run", "main.py"])
