@@ -1,6 +1,10 @@
 from machine import Pin, Timer
 import time
 
+from util import singleton
+
+
+@singleton
 class Speaker:
     def __init__(self, scheduler):
         self.buzz = Pin(14, Pin.OUT)

@@ -1,17 +1,21 @@
 from machine import Pin
 import time
 
-STATE_UNPRESSED=1
-STATE_PRESSED=2
+from util import singleton
 
-class Buttons:
-    PINS = {
+STATE_UNPRESSED = 1
+STATE_PRESSED = 2
+
+PINS = {
     1: 2,
     2: 17,
     3: 15,
 }
-    class Button:
 
+
+@singleton
+class Buttons:
+    class Button:
         class Callback:
             def __init__(self, callback, min=0, max=-1):
                 self.callback = callback
@@ -19,7 +23,7 @@ class Buttons:
                 self.max = max
 
         def __init__(self, number):
-            self.pin = Pin(Buttons.PINS[number], Pin.IN, Pin.PULL_UP)
+            self.pin = Pin(PINS[number], Pin.IN, Pin.PULL_UP)
             self.number = number
             self.state = STATE_UNPRESSED
             self.callbacks = []
@@ -41,25 +45,25 @@ class Buttons:
 
     def __init__(self, scheduler):
         self.buttons = [
-            Buttons.Button(number) for number in (1,2,3)
+            self.Button(number) for number in (1, 2, 3)
         ]
         scheduler.schedule("button-press", 1, self.millis_callback)
 
     def add_callback(self, number, callback, min=0, max=-1):
-        self.buttons[number-1].add_callback(callback, min, max)
+        self.buttons[number - 1].add_callback(callback, min, max)
 
     def remove_callback(self, number, callback, min=0, max=-1):
-        self.buttons[number-1].remove_callback(callback, min, max)
+        self.buttons[number - 1].remove_callback(callback, min, max)
 
     def clear_callbacks(self, number):
-        self.buttons[number-1].clear_callbacks()
+        self.buttons[number - 1].clear_callbacks()
 
     def get_button(self, number):
-        return self.buttons[number-1]
+        return self.buttons[number - 1]
 
     def millis_callback(self, t):
         for button in self.buttons:
-            if len(button.callbacks)>0:
+            if len(button.callbacks) > 0:
                 if button.state == STATE_UNPRESSED and button.pin.value() == 0:
                     button.state = STATE_PRESSED
                     button.pressed = time.ticks_ms()
@@ -67,9 +71,10 @@ class Buttons:
                     button.state = STATE_UNPRESSED
                     tm = time.ticks_ms()
                     press_duration = time.ticks_diff(tm, button.pressed)
-                    print("Button %d pressed for %dms" %(button.number, press_duration))
+                    print("Button %d pressed for %dms" % (button.number, press_duration))
                     for callback in button.callbacks:
-                        if callback.min < press_duration and (callback.max==-1 or press_duration <= callback.max):
+                        if callback.min < press_duration and (
+                                callback.max == -1 or press_duration <= callback.max):
                             callback.callback(t)
                             break
                     button.pressed = None

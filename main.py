@@ -1,24 +1,20 @@
 import time
-from display import Display
-from speaker import Speaker
-from buttons import Buttons
 from scheduler import Scheduler
 from clock import Clock
-from rtc import RTC
 from apps import Apps
 from pomodoro import Pomodoro
 from time_set import TimeSet
 
-scheduler = Scheduler()
-display = Display(scheduler)
-speaker = Speaker(scheduler)
-buttons = Buttons(scheduler)
-rtc = RTC()
+APP_CLASSES = [
+    Clock,
+    Pomodoro,
+    TimeSet,
+]
 
-apps = Apps(display, buttons)
-apps.add(Clock(scheduler, display, rtc))
-apps.add(TimeSet(scheduler, display, buttons, rtc))
-apps.add(Pomodoro(scheduler, display, speaker, buttons))
+scheduler = Scheduler()
+apps = Apps(scheduler)
+for App in APP_CLASSES:
+    apps.add(App(scheduler))
 
 print("STARTING...")
 scheduler.start()
