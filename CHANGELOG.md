@@ -1,5 +1,6 @@
 # Change Log
 
+* **2021/10/05**: Unified interface for the app classes
 * **2021/10/02**: Add basic time-set app
 * **2021/10/01**: Improved 'app' functionality
   Top button switches between apps
