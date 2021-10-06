@@ -1,9 +1,8 @@
 from machine import Timer
 import time
-import _thread
+
 
 class Scheduler:
-
     class Schedule:
         def __init__(self, name, duration, callback):
             self.name = name
@@ -11,7 +10,8 @@ class Scheduler:
             self.callback = callback
             self.lastrun = time.ticks_ms()
 
-    count=0
+    count = 0
+
     def __init__(self):
         self.schedules = []
 
@@ -31,4 +31,3 @@ class Scheduler:
                 if time.ticks_diff(tm, schedule.lastrun) > schedule.duration:
                     schedule.callback(t)
                     schedule.lastrun = tm
-

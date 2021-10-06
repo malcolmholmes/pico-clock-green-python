@@ -1,13 +1,17 @@
 import time
 from apps import App
+from buttons import Buttons
+from display import Display
+from speaker import Speaker
+
 
 class Pomodoro:
-    def __init__(self, scheduler, display, speaker, buttons):
+    def __init__(self, scheduler):
         App.__init__(self, "Pomodoro", "pomod")
-        self.display = display
-        self.speaker = speaker
+        self.display = Display(scheduler)
+        self.speaker = Speaker(scheduler)
         self.scheduler = scheduler
-        self.buttons = buttons
+        self.buttons = Buttons()
         self.enabled = False
         self.started = False
         self.start_time = None

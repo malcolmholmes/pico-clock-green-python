@@ -1,6 +1,7 @@
-import time
-import machine
 from apps import App
+from buttons import Buttons
+from display import Display
+from rtc import RTC
 
 month_max = {
     1: 31, # January
@@ -28,13 +29,13 @@ class TimeSet(App):
             self.length = length
             self.offset = offset
 
-    def __init__(self, scheduler, display, buttons, rtc):
+    def __init__(self, scheduler):
         App.__init__(self, "Time Set", "timeset")
 
-        self.display = display
+        self.display = Display(scheduler)
         self.scheduler = scheduler
-        self.buttons = buttons
-        self.rtc = rtc
+        self.buttons = Buttons(scheduler)
+        self.rtc = RTC()
         self.grab_top_button = True
         self.enabled = False
         self.state = None
