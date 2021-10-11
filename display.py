@@ -139,7 +139,19 @@ class Display:
             "Sat": self.Icon(18, 0, width=2),
             "Sun": self.Icon(21, 0, width=2),
         }
-
+    day_of_week = {
+        0: "Sun",
+        1: "Mon",
+        2: "Tue",
+        3: "Wed",
+        4: "Thur",
+        5: "Fri",
+        6: "Sat"      
+        }
+    def show_day(self, int):
+        self.clear()
+        self.show_icon(self.day_of_week[int])
+        
     # Derived from c code created by yufu on 2021/1/23.
     # Modulus method: negative code, reverse, line by line, 4X7 font
     def initialise_fonts(self):
