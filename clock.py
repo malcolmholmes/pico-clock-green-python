@@ -35,5 +35,5 @@ class Clock(App):
     def update_time(self):
         t = self.rtc.get_time()
         now = "%02d:%02d" % (t[3], t[4])
-        self.display.show_day(t[6])
+        self.display.show_day((t[6] + 1) % 7)
         self.display.show_text(now)
