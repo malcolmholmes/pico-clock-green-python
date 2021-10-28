@@ -36,7 +36,11 @@ class Buttons:
 
         def remove_callback(self, callback, min=0, max=-1):
             for callback in self.callbacks:
-                if callback.callback == callback and callback.min == min and callback.max == max:
+                if (
+                    callback.callback == callback
+                    and callback.min == min
+                    and callback.max == max
+                ):
                     self.callback.remove(callback)
                     break
 
@@ -44,9 +48,7 @@ class Buttons:
             self.callbacks = []
 
     def __init__(self, scheduler):
-        self.buttons = [
-            self.Button(number) for number in (1, 2, 3)
-        ]
+        self.buttons = [self.Button(number) for number in (1, 2, 3)]
         scheduler.schedule("button-press", 1, self.millis_callback)
 
     def add_callback(self, number, callback, min=0, max=-1):
@@ -71,10 +73,13 @@ class Buttons:
                     button.state = STATE_UNPRESSED
                     tm = time.ticks_ms()
                     press_duration = time.ticks_diff(tm, button.pressed)
-                    print("Button %d pressed for %dms" % (button.number, press_duration))
+                    print(
+                        "Button %d pressed for %dms" % (button.number, press_duration)
+                    )
                     for callback in button.callbacks:
                         if callback.min < press_duration and (
-                                callback.max == -1 or press_duration <= callback.max):
+                            callback.max == -1 or press_duration <= callback.max
+                        ):
                             callback.callback(t)
                             break
                     button.pressed = None

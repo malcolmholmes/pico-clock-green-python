@@ -17,7 +17,7 @@ class Pomodoro:
         self.start_time = None
         self.time_left = None
         scheduler.schedule("pomodoro-second", 1000, self.secs_callback)
-        self.pomodoro_duration=25*60 # 25 mins
+        self.pomodoro_duration = 25 * 60  # 25 mins
 
     def enable(self):
         self.enabled = True
@@ -25,7 +25,7 @@ class Pomodoro:
         self.display.show_text(t)
         self.buttons.add_callback(2, self.start_callback, max=500)
         self.buttons.add_callback(2, self.clear_callback, min=500)
-        
+
     def disable(self):
         self.enabled = False
         self.started = False
@@ -38,7 +38,9 @@ class Pomodoro:
             self.time_left = self.pomodoro_duration
 
     def _time_left(self):
-        return self.time_left - (time.ticks_diff(time.ticks_ms(), self.start_time)/1000)
+        return self.time_left - (
+            time.ticks_diff(time.ticks_ms(), self.start_time) / 1000
+        )
 
     def stop(self):
         self.started = False
@@ -49,7 +51,7 @@ class Pomodoro:
             now = int(self._time_left())
             t = "%02d:%02d" % (now // 60, now % 60)
             self.display.show_text(t)
-            if now <=0:
+            if now <= 0:
                 self.speaker.beep(1000)
                 self.started = False
                 self.start_time = None

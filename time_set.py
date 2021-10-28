@@ -4,19 +4,20 @@ from display import Display
 from rtc import RTC
 
 month_max = {
-    1: 31, # January
-    2: 29, # February
-    3: 31, # March
-    4: 30, # April
-    5: 31, # May
-    6: 30, # June
-    7: 31, # July
-    8: 31, # August
-    9: 30, # September
-    10: 31, # October
-    11: 30, # November
-    12: 31, # December
+    1: 31,  # January
+    2: 29,  # February
+    3: 31,  # March
+    4: 30,  # April
+    5: 31,  # May
+    6: 30,  # June
+    7: 31,  # July
+    8: 31,  # August
+    9: 30,  # September
+    10: 31,  # October
+    11: 30,  # November
+    12: 31,  # December
 }
+
 
 class TimeSet(App):
     class State:
@@ -70,7 +71,7 @@ class TimeSet(App):
 
     def half_secs_callback(self, t):
         if self.enabled:
-            self.flash_count = (self.flash_count+1)%3
+            self.flash_count = (self.flash_count + 1) % 3
             if self.flash_count == 2:
                 if self.state.length == 2:
                     self.display.show_text("  ", pos=self.state.position)
@@ -81,9 +82,15 @@ class TimeSet(App):
                 if not self.flash_state:
                     self.flash_state = True
                     if self.state.length == 2:
-                        self.display.show_text("%02d" % self.time[self.state.index], pos=self.state.position)
+                        self.display.show_text(
+                            "%02d" % self.time[self.state.index],
+                            pos=self.state.position,
+                        )
                     elif self.state.length == 4:
-                        self.display.show_text("%04d" % self.time[self.state.index], pos=self.state.position)
+                        self.display.show_text(
+                            "%04d" % self.time[self.state.index],
+                            pos=self.state.position,
+                        )
 
     def mins_callback(self, t):
         if self.enabled:
@@ -111,12 +118,14 @@ class TimeSet(App):
         self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
-        if max ==-1:
+        if max == -1:
             # This is "day of month", which varies
             month = t[1]
             max = month_max[month]
 
-        t[self.state.index] = (t[self.state.index]+1-self.state.offset) % max + self.state.offset
+        t[self.state.index] = (
+            t[self.state.index] + 1 - self.state.offset
+        ) % max + self.state.offset
         self.rtc.save_time(tuple(t))
         self.flash_count = 0
         self.update_display()
@@ -125,12 +134,14 @@ class TimeSet(App):
         self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
-        if max ==-1:
+        if max == -1:
             # This is "day of month", which varies
             month = t[1]
             max = month_max[month]
 
-        t[self.state.index] = (t[self.state.index]-1-self.state.offset) % max + self.state.offset
+        t[self.state.index] = (
+            t[self.state.index] - 1 - self.state.offset
+        ) % max + self.state.offset
         self.rtc.save_time(tuple(t))
         self.flash_count = 0
         self.update_display()
