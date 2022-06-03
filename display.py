@@ -1,7 +1,7 @@
-from machine import Pin, Timer
+from machine import Pin
 
 from util import singleton
-
+from utime import sleep_us
 
 @singleton
 class Display:
@@ -9,6 +9,8 @@ class Display:
         self.a0 = Pin(16, Pin.OUT)
         self.a1 = Pin(18, Pin.OUT)
         self.a2 = Pin(22, Pin.OUT)
+
+        self.oe = Pin(13, Pin.OUT)
 
         self.sdi = Pin(11, Pin.OUT)
         self.clk = Pin(10, Pin.OUT)
@@ -21,6 +23,11 @@ class Display:
         self.disp_offset = 2
         self.initialise_fonts()
         self.initialise_icons()
+        
+        # CPU freq needs to be increase to 250 for better results
+        self.backlight_sleep = [10, 100, 500, 1000, 1500]  # From 10 (low) to 1500(High)
+        self.current_backlight = 4
+
         scheduler.schedule("enable-leds", 1, self.enable_leds)
 
     def enable_leds(self, t):
@@ -39,6 +46,9 @@ class Display:
         self.a0.value(1 if self.row & 0x01 else 0)
         self.a1.value(1 if self.row & 0x02 else 0)
         self.a2.value(1 if self.row & 0x04 else 0)
+        self.oe.value(0)
+        sleep_us(self.backlight_sleep[self.current_backlight])
+        self.oe.value(1)
 
     def clear(self, x=0, y=0, w=24, h=7):
         for yy in range(y, y + h + 1):
@@ -80,13 +90,19 @@ class Display:
             self.leds[icon.y][icon.x + w] = 0
         self.leds_changed = True
 
-    def backlight_on(self):
+    def sidelight_on(self):
         self.leds[0][2] = 1
         self.leds[0][5] = 1
 
-    def backlight_off(self):
+    def sidelight_off(self):
         self.leds[0][2] = 0
         self.leds[0][5] = 0
+
+    def switch_backlight(self):
+        if self.current_backlight == 4:
+            self.current_backlight = 0
+        else:
+            self.current_backlight += 1
 
     def print(self):
         for row in range(0, 8):
@@ -201,10 +217,10 @@ class Display:
             "3": [0x0F, 0x08, 0x08, 0x0F, 0x08, 0x08, 0x0F],
             "4": [0x09, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x08],
             "5": [0x0F, 0x01, 0x01, 0x0F, 0x08, 0x08, 0x0F],
-            "5": [0x0F, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
-            "6": [0x0F, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08],
-            "7": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x0F],
-            "8": [0x0F, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x0F],
+            "6": [0x0F, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
+            "7": [0x0F, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08],
+            "8": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x0F],
+            "9": [0x0F, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x0F],
             "A": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x09],
             "B": [0x01, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
             "C": [0x0F, 0x01, 0x01, 0x01, 0x01, 0x01, 0x0F],
