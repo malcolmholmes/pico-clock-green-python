@@ -1,4 +1,4 @@
-from machine import Pin
+from machine import Pin, ADC
 
 from util import singleton
 from utime import sleep_us
@@ -15,6 +15,8 @@ class Display:
         self.sdi = Pin(11, Pin.OUT)
         self.clk = Pin(10, Pin.OUT)
         self.le = Pin(12, Pin.OUT)
+        
+        self.ain = ADC(26)
 
         self.row = 0
         self.count = 0
@@ -23,12 +25,17 @@ class Display:
         self.disp_offset = 2
         self.initialise_fonts()
         self.initialise_icons()
-        
-        # CPU freq needs to be increase to 250 for better results
-        self.backlight_sleep = [10, 100, 500, 1000, 1500]  # From 10 (low) to 1500(High)
-        self.current_backlight = 4
 
-        scheduler.schedule("enable-leds", 1, self.enable_leds)
+        self.scheduler = scheduler
+
+        # CPU freq needs to be increase to 250 for better results
+        self.backlight_sleep = [10, 100, 500, 1500]  # From 10 (low) to 1500(High)
+        self.current_backlight = 3
+        self.auto_backlight = True
+        self.show_icon("AutoLight")
+        self.update_auto_backlight_value(None)
+        self.scheduler.schedule("enable-leds", 1, self.enable_leds)
+        self.scheduler.schedule("update_auto_backlight_value", 1000, self.update_auto_backlight_value)
 
     def enable_leds(self, t):
         self.count += 1
@@ -99,10 +106,29 @@ class Display:
         self.leds[0][5] = 0
 
     def switch_backlight(self):
-        if self.current_backlight == 4:
+        if self.auto_backlight:
+            self.auto_backlight = False
+            self.hide_icon("AutoLight")
             self.current_backlight = 0
+            self.scheduler.remove("update_auto_backlight_value")
+        elif self.current_backlight == 3:
+            self.show_icon("AutoLight")
+            self.auto_backlight = True
+            self.update_auto_backlight_value(None)
+            self.scheduler.schedule("update_auto_backlight_value", 1000, self.update_auto_backlight_value)
         else:
             self.current_backlight += 1
+
+    def update_auto_backlight_value(self, t):
+        aim = self.ain.read_u16()
+        if aim > 60000: # Low light
+            self.current_backlight = 0
+        elif aim > 58000:
+            self.current_backlight = 1
+        elif aim > 10000:
+            self.current_backlight = 2
+        else:
+            self.current_backlight = 3
 
     def print(self):
         for row in range(0, 8):

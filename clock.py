@@ -40,6 +40,8 @@ class Clock(App):
         now = "%02d:%02d" % (t[3], t[4])
         self.display.show_day(t[6])
         self.display.show_text(now)
+        if self.display.auto_backlight:
+            self.display.show_icon("AutoLight")
 
     def backlight_callback(self, t):
         self.display.switch_backlight()
