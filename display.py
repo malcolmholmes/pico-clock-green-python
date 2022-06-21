@@ -29,7 +29,7 @@ class Display:
         self.scheduler = scheduler
 
         # CPU freq needs to be increase to 250 for better results
-        self.backlight_sleep = [10, 100, 500, 1500]  # From 10 (low) to 1500(High)
+        self.backlight_sleep = [10, 100, 300, 1500]  # From 10 (low) to 1500(High)
         self.current_backlight = 3
         self.auto_backlight = True
         self.show_icon("AutoLight")
@@ -125,7 +125,7 @@ class Display:
             self.current_backlight = 0
         elif aim > 58000:
             self.current_backlight = 1
-        elif aim > 10000:
+        elif aim > 40000:
             self.current_backlight = 2
         else:
             self.current_backlight = 3
