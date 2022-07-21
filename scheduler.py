@@ -22,6 +22,11 @@ class Scheduler:
     def schedule(self, name, duration, callback):
         self.schedules.append(self.Schedule(name, duration, callback))
 
+    def remove(self, name):
+        for schedule in self.schedules:
+            if schedule.name == name:
+                self.schedules.remove(schedule)
+
     def event_callback(self, t):
         for schedule in self.schedules:
             if schedule.duration == 1:
