@@ -1,7 +1,7 @@
-from machine import Pin, Timer
+from machine import Pin, ADC
 
 from util import singleton
-
+from utime import sleep_us
 
 @singleton
 class Display:
@@ -10,9 +10,13 @@ class Display:
         self.a1 = Pin(18, Pin.OUT)
         self.a2 = Pin(22, Pin.OUT)
 
+        self.oe = Pin(13, Pin.OUT)
+
         self.sdi = Pin(11, Pin.OUT)
         self.clk = Pin(10, Pin.OUT)
         self.le = Pin(12, Pin.OUT)
+        
+        self.ain = ADC(26)
 
         self.row = 0
         self.count = 0
@@ -21,7 +25,17 @@ class Display:
         self.disp_offset = 2
         self.initialise_fonts()
         self.initialise_icons()
-        scheduler.schedule("enable-leds", 1, self.enable_leds)
+
+        self.scheduler = scheduler
+
+        # CPU freq needs to be increase to 250 for better results
+        self.backlight_sleep = [10, 100, 300, 1500]  # From 10 (low) to 1500(High)
+        self.current_backlight = 3
+        self.auto_backlight = True
+        self.show_icon("AutoLight")
+        self.update_auto_backlight_value(None)
+        self.scheduler.schedule("enable-leds", 1, self.enable_leds)
+        self.scheduler.schedule("update_auto_backlight_value", 1000, self.update_auto_backlight_value)
 
     def enable_leds(self, t):
         self.count += 1
@@ -39,6 +53,9 @@ class Display:
         self.a0.value(1 if self.row & 0x01 else 0)
         self.a1.value(1 if self.row & 0x02 else 0)
         self.a2.value(1 if self.row & 0x04 else 0)
+        self.oe.value(0)
+        sleep_us(self.backlight_sleep[self.current_backlight])
+        self.oe.value(1)
 
     def clear(self, x=0, y=0, w=24, h=7):
         for yy in range(y, y + h + 1):
@@ -80,13 +97,38 @@ class Display:
             self.leds[icon.y][icon.x + w] = 0
         self.leds_changed = True
 
-    def backlight_on(self):
+    def sidelight_on(self):
         self.leds[0][2] = 1
         self.leds[0][5] = 1
 
-    def backlight_off(self):
+    def sidelight_off(self):
         self.leds[0][2] = 0
         self.leds[0][5] = 0
+
+    def switch_backlight(self):
+        if self.auto_backlight:
+            self.auto_backlight = False
+            self.hide_icon("AutoLight")
+            self.current_backlight = 0
+            self.scheduler.remove("update_auto_backlight_value")
+        elif self.current_backlight == 3:
+            self.show_icon("AutoLight")
+            self.auto_backlight = True
+            self.update_auto_backlight_value(None)
+            self.scheduler.schedule("update_auto_backlight_value", 1000, self.update_auto_backlight_value)
+        else:
+            self.current_backlight += 1
+
+    def update_auto_backlight_value(self, t):
+        aim = self.ain.read_u16()
+        if aim > 60000: # Low light
+            self.current_backlight = 0
+        elif aim > 58000:
+            self.current_backlight = 1
+        elif aim > 40000:
+            self.current_backlight = 2
+        else:
+            self.current_backlight = 3
 
     def print(self):
         for row in range(0, 8):
@@ -214,10 +256,10 @@ class Display:
             "3": [0x0F, 0x08, 0x08, 0x0F, 0x08, 0x08, 0x0F],
             "4": [0x09, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x08],
             "5": [0x0F, 0x01, 0x01, 0x0F, 0x08, 0x08, 0x0F],
-            "5": [0x0F, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
-            "6": [0x0F, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08],
-            "7": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x0F],
-            "8": [0x0F, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x0F],
+            "6": [0x0F, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
+            "7": [0x0F, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08],
+            "8": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x0F],
+            "9": [0x0F, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x0F],
             "A": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x09],
             "B": [0x01, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
             "C": [0x0F, 0x01, 0x01, 0x01, 0x01, 0x01, 0x0F],
