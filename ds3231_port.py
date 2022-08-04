@@ -60,7 +60,7 @@ class DS3231:
         else:
             YY += 1900
         # Time from DS3231 in time.localtime() format (less yday)
-        result = YY, MM, DD, hh, mm, ss, wday -1, 0
+        result = YY, MM, DD, hh, mm, ss, wday, 0
         if set_rtc:
             if rtc is None:
                 # Best we can do is to set local time
@@ -75,7 +75,7 @@ class DS3231:
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 0, tobytes(dec2bcd(ss)))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 1, tobytes(dec2bcd(mm)))
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 2, tobytes(dec2bcd(hh)))  # Sets to 24hr mode
-        self.ds3231.writeto_mem(DS3231_I2C_ADDR, 3, tobytes(dec2bcd(wday + 1)))  # 1 == Monday, 7 == Sunday
+        self.ds3231.writeto_mem(DS3231_I2C_ADDR, 3, tobytes(dec2bcd(wday)))  # 0 == Monday, 6 == Sunday
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 4, tobytes(dec2bcd(mday)))  # Day of month
         if YY >= 2000:
             self.ds3231.writeto_mem(DS3231_I2C_ADDR, 5, tobytes(dec2bcd(MM) | 0b10000000))  # Century bit
@@ -112,7 +112,7 @@ class DS3231:
         ds = utime.ticks_diff(utime.ticks_ms(), t)  # ms to transition of RTC
         ds3231_start = utime.mktime(self.convert())  # Time when transition occurred
         t = rtc.datetime()
-        rtc_start = utime.mktime((t[0], t[1], t[2], t[4], t[5], t[6], t[3] - 1, 0))  # y m d h m s wday 0
+        rtc_start = utime.mktime((t[0], t[1], t[2], t[4], t[5], t[6], t[3], 0))  # y m d h m s wday 0
 
         utime.sleep(runtime)  # Wait a while (precision doesn't matter)
 
@@ -124,7 +124,7 @@ class DS3231:
         de = utime.ticks_diff(utime.ticks_ms(), t)  # ms to transition of RTC
         ds3231_end = utime.mktime(self.convert())  # Time when transition occurred
         t = rtc.datetime()
-        rtc_end = utime.mktime((t[0], t[1], t[2], t[4], t[5], t[6], t[3] - 1, 0))  # y m d h m s wday 0
+        rtc_end = utime.mktime((t[0], t[1], t[2], t[4], t[5], t[6], t[3], 0))  # y m d h m s wday 0
 
         d_rtc = 1000 * (rtc_end - rtc_start) + de - ds  # ms recorded by RTC
         d_ds3231 = 1000 * (ds3231_end - ds3231_start)  # ms recorded by DS3231
